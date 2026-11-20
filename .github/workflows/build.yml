@@ -23,7 +23,7 @@ jobs:
 
       - name: Compilar
         env:
-          L2_FIRMA: ${{ secrets.L2_FIRMA }}
+          L2_FIRMA: ${{ secrets.L2_FIRMA || secrets.L2_SECRET }}
         run: |
           mkdir -p logs
           exec > >(tee logs/build.log) 2>&1
@@ -50,7 +50,7 @@ jobs:
         if: success()
         env:
           GH_TOKEN: ${{ github.token }}
-          L2_FIRMA: ${{ secrets.L2_FIRMA }}
+          L2_FIRMA: ${{ secrets.L2_FIRMA || secrets.L2_SECRET }}
         run: |
           if [ -z "$L2_FIRMA" ]; then echo "Sin firma: no se publica"; exit 0; fi
           cp app/build/outputs/apk/debug/app-debug.apk L2Lethal.apk

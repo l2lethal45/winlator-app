@@ -309,4 +309,5 @@
     <string name="l2lethal_net_detail">%1$d de %2$d MB · %3$s\nSó na primeira vez. Não feche o app.</string>
     <string name="l2lethal_opening">Abrindo o L2 Lethal...</string>
     <string name="l2lethal_stuck">Parece que travou. Feche o app pelos Recentes e abra novamente.</string>
+    <string name="l2lethal_send_log">Enviar registro</string>
 </resources>

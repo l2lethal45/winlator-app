@@ -10,4 +10,5 @@
     <string name="l2lethal_net_detail">%1$d of %2$d MB · %3$s\nFirst time only. Do not close the app.</string>
     <string name="l2lethal_opening">Opening L2 Lethal...</string>
     <string name="l2lethal_stuck">It seems stuck. Close the app from Recents and open it again.</string>
+    <string name="l2lethal_send_log">Send log</string>
 </resources>

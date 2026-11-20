@@ -68,6 +68,20 @@ public class PreloaderDialog {
         });
     }
 
+    /** L2 Lethal: boton opcional (label null = ocultar). */
+    public void setActionOnUiThread(final String label, final Runnable action) {
+        activity.runOnUiThread(() -> {
+            synchronized (PreloaderDialog.this) {
+                if (dialog == null || !dialog.isShowing()) return;
+                android.widget.Button b = dialog.findViewById(R.id.L2Action);
+                if (label == null) { b.setVisibility(android.view.View.GONE); return; }
+                b.setText(label);
+                b.setOnClickListener((v) -> action.run());
+                b.setVisibility(android.view.View.VISIBLE);
+            }
+        });
+    }
+
     public void closeOnUiThread() {
         activity.runOnUiThread(this::close);
     }

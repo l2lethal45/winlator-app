@@ -4,7 +4,17 @@ import android.app.Activity;
 
 import com.winlator.R;
 import com.winlator.container.Container;
+import com.winlator.core.Callback;
 import com.winlator.core.PreloaderDialog;
+
+import android.content.Intent;
+import android.net.Uri;
+
+import androidx.core.content.FileProvider;
+
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 import java.io.File;
 import java.util.ArrayDeque;
@@ -22,7 +32,51 @@ public final class StartupMonitor {
     private static final long STUCK_NO_PROGRESS_MS = 4 * 60 * 1000L;
     private static final long STUCK_BOOT_MS = 10 * 60 * 1000L;
 
+    private static final long SHOW_LOG_BUTTON_MS = 3 * 60 * 1000L;
+    private static final long MAX_LOG_BYTES = 3L * 1024 * 1024;
+    public static final String LOG_FILE = "l2lethal_registro.txt";
+
+    private static OutputStream logOut;
+    private static long logBytes;
+
     private StartupMonitor() {}
+
+    /** Registro de lo que dice Wine/Box64 en este arranque (se reemplaza en cada arranque, maximo 3 MB). */
+    public static synchronized Callback<String> openLog(Activity activity) {
+        try {
+            if (logOut != null) logOut.close();
+            logOut = new FileOutputStream(new File(activity.getFilesDir(), LOG_FILE), false);
+            logBytes = 0;
+            log("L2 Lethal " + android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL + " Android " + android.os.Build.VERSION.RELEASE + " " + android.os.Build.HARDWARE);
+        }
+        catch (Exception e) { logOut = null; }
+        return StartupMonitor::log;
+    }
+
+    public static synchronized void log(String line) {
+        if (logOut == null || logBytes > MAX_LOG_BYTES) return;
+        try {
+            byte[] b = (line + "\n").getBytes(StandardCharsets.UTF_8);
+            logOut.write(b);
+            logOut.flush();
+            logBytes += b.length;
+        }
+        catch (Exception e) {}
+    }
+
+    private static void shareLog(Activity activity) {
+        try {
+            File f = new File(activity.getFilesDir(), LOG_FILE);
+            Uri uri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".FileProvider", f);
+            Intent send = new Intent(Intent.ACTION_SEND);
+            send.setType("text/plain");
+            send.putExtra(Intent.EXTRA_STREAM, uri);
+            send.putExtra(Intent.EXTRA_SUBJECT, "Registro L2 Lethal");
+            send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            activity.startActivity(Intent.createChooser(send, activity.getString(R.string.l2lethal_send_log)));
+        }
+        catch (Exception e) {}
+    }
 
     public static void start(final Activity activity, final PreloaderDialog dialog, final Container container) {
         final File monoDir = new File(container.getRootDir(), ".wine/drive_c/windows/mono");
@@ -30,7 +84,8 @@ public final class StartupMonitor {
 
         Thread t = new Thread(() -> {
             final long t0 = System.currentTimeMillis();
-            long lastSize = -1, lastChange = t0;
+            long lastSize = -1, lastChange = t0, lastLog = 0;
+            boolean buttonShown = false;
             try { Thread.sleep(300); } catch (InterruptedException e) { return; }
 
             while (dialog.isShowing() && !activity.isFinishing()) {
@@ -67,6 +122,11 @@ public final class StartupMonitor {
                 }
 
                 dialog.setStatusOnUiThread(title, percent, detail);
+                if (now - lastLog >= 15000) { lastLog = now; log("[L2] " + time + " .NET=" + (lastSize < 0 ? "ok" : (lastSize / 1000000) + "MB") + " | " + title); }
+                if (!buttonShown && !monoAtStart && elapsed > SHOW_LOG_BUTTON_MS) {
+                    buttonShown = true;
+                    dialog.setActionOnUiThread(activity.getString(R.string.l2lethal_send_log), () -> shareLog(activity));
+                }
                 try { Thread.sleep(1000); } catch (InterruptedException e) { return; }
             }
         }, "L2LethalStartupMonitor");

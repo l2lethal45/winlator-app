@@ -232,6 +232,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         preloaderDialog.show(R.string.starting_up);
         if (container != null && com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(container.getName())) {
+            com.winlator.core.ProcessHelper.addDebugCallback(com.winlator.l2lethal.StartupMonitor.openLog(this));
             com.winlator.l2lethal.StartupMonitor.start(this, preloaderDialog, container);
         }
 
@@ -505,6 +506,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         boolean enableWineDebug = preferences.getBoolean("enable_wine_debug", false);
         String wineDebugChannels = preferences.getString("wine_debug_channels", SettingsFragment.DEFAULT_WINE_DEBUG_CHANNELS);
         envVars.put("WINEDEBUG", enableWineDebug && !wineDebugChannels.isEmpty() ? "+"+wineDebugChannels.replace(",", ",+") : "-all");
+        // L2 Lethal: dejar los errores de Wine (err) en el registro que se puede enviar desde la pantalla de arranque
+        if (!enableWineDebug && container != null && com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(container.getName())) envVars.put("WINEDEBUG", "fixme-all,+mscoree");
 
         FileUtils.clear(rootFS.getTmpDir());
 

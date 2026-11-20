@@ -6,7 +6,18 @@
     android:clickable="false"
     android:focusable="false">
 
+    <!-- L2 Lethal: fondo del server durante la carga (tapa los controles); oculto en Winlator normal -->
+    <ImageView
+        android:id="@+id/L2Background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/l2lethal_loading_bg"
+        android:background="#000000"
+        android:visibility="gone" />
+
     <LinearLayout
+        android:id="@+id/L2Box"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"

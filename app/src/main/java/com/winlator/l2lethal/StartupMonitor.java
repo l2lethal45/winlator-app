@@ -82,8 +82,10 @@ public final class StartupMonitor {
         final File monoDir = new File(container.getRootDir(), ".wine/drive_c/windows/mono");
         final boolean monoAtStart = new File(monoDir, "mono-2.0").isDirectory() && dirSize(monoDir) >= MONO_TOTAL_BYTES * 98 / 100;
 
+        dialog.setL2StyleOnUiThread();
         Thread t = new Thread(() -> {
             final long t0 = System.currentTimeMillis();
+            final ArrayDeque<long[]> samples = new ArrayDeque<>(); // {tiempo, MB instalados} de los ultimos 30 s
             long lastSize = -1, lastChange = t0, lastLog = 0;
             boolean buttonShown = false;
             try { Thread.sleep(300); } catch (InterruptedException e) { return; }
@@ -96,13 +98,15 @@ public final class StartupMonitor {
                 int percent = -1;
 
                 if (monoAtStart) {
-                    title = activity.getString(R.string.l2lethal_opening);
+                    title = activity.getString(R.string.l2lethal_opening_quick);
                     detail = time;
+                    percent = -2;
                 }
                 else {
                     long size = dirSize(monoDir);
                     if (size != lastSize) { lastSize = size; lastChange = now; }
                     if (size <= 0) {
+                        percent = -2;
                         title = activity.getString(R.string.l2lethal_boot_title);
                         detail = activity.getString(R.string.l2lethal_boot_detail, time);
                         if (elapsed > STUCK_BOOT_MS) detail += "\n" + activity.getString(R.string.l2lethal_stuck);
@@ -110,12 +114,22 @@ public final class StartupMonitor {
                     else if (size < MONO_TOTAL_BYTES * 98 / 100) {
                         percent = (int) Math.min(99, size * 100 / MONO_TOTAL_BYTES);
                         title = activity.getString(R.string.l2lethal_net_title, percent);
+                        samples.addLast(new long[]{now, size});
+                        while (samples.size() > 2 && now - samples.peekFirst()[0] > 30000) samples.removeFirst();
+                        String eta = activity.getString(R.string.l2lethal_eta_calc);
+                        long[] first = samples.peekFirst();
+                        if (now - first[0] >= 8000 && size > first[1]) {
+                            double bytesPerMs = (double) (size - first[1]) / (now - first[0]);
+                            long leftMs = (long) ((MONO_TOTAL_BYTES - size) / bytesPerMs);
+                            int min = (int) Math.ceil(leftMs / 60000.0);
+                            eta = leftMs < 60000 ? activity.getString(R.string.l2lethal_eta_less) : activity.getString(R.string.l2lethal_eta_min, min);
+                        }
                         detail = activity.getString(R.string.l2lethal_net_detail,
-                            (int) (size / 1000000), (int) (MONO_TOTAL_BYTES / 1000000), time);
+                            (int) (size / 1000000), (int) (MONO_TOTAL_BYTES / 1000000), eta, time);
                         if (now - lastChange > STUCK_NO_PROGRESS_MS) detail += "\n" + activity.getString(R.string.l2lethal_stuck);
                     }
                     else {
-                        percent = 100;
+                        percent = -2;
                         title = activity.getString(R.string.l2lethal_opening);
                         detail = time;
                     }

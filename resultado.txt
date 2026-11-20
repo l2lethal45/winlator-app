@@ -1,0 +1,6 @@
+success Fri Nov 20 05:17:05 UTC 2026 0554a861277672f983e1491708d2e8c4d99232da
+total 167156
+drwxr-xr-x 2 runner runner      4096 Nov 20 05:16 .
+drwxr-xr-x 3 runner runner      4096 Nov 20 05:16 ..
+-rw-r--r-- 1 runner runner 171153990 Nov 20 05:16 app-debug.apk
+-rw-r--r-- 1 runner runner       407 Nov 20 05:16 output-metadata.json

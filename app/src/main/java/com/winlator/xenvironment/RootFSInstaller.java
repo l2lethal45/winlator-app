@@ -70,6 +70,7 @@ public abstract class RootFSInstaller {
             if (success) {
                 rootFS.createRFSVersionFile(LATEST_VERSION);
                 resetContainerRFSVersions(activity);
+                activity.runOnUiThread(() -> com.winlator.l2lethal.L2LethalSetup.run(activity));
             }
             else AppUtils.showToast(activity, R.string.unable_to_install_system_files);
 
@@ -80,6 +81,7 @@ public abstract class RootFSInstaller {
     public static void installIfNeeded(final MainActivity activity) {
         RootFS rootFS = RootFS.find(activity);
         if (!rootFS.isValid() || rootFS.getVersion() < LATEST_VERSION) install(activity);
+        else com.winlator.l2lethal.L2LethalSetup.run(activity);
     }
 
     private static void clearOptDir(File optDir) {

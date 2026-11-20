@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Winlator</string>
+    <string name="app_name">L2 Lethal</string>
     <string name="run">Run</string>
     <string name="edit">Edit</string>
     <string name="remove">Remove</string>
@@ -359,4 +359,8 @@
     <string name="fgs_notification_content_else">Winlator is running in the background</string>
     <string name="save_mem_on_run_from_steam">Save memory on run from Steam</string>
     <string name="present_mode">Present Mode</string>
+    <string name="l2lethal_preparing">Preparando L2 Lethal...</string>
+    <string name="l2lethal_setup_error">No se pudo preparar L2 Lethal. Cierra y abre la app otra vez.</string>
+    <string name="l2lethal_downloading_net">Descargando componentes de .NET (85 MB, solo la primera vez)...</string>
+    <string name="l2lethal_net_error">No se pudo descargar .NET. Revisa tu internet y abre la app otra vez.</string>
 </resources>

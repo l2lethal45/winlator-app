@@ -5,15 +5,26 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'com.winlator'
+        applicationId 'com.l2lethal.mobile'
         minSdkVersion 26
         targetSdkVersion 28
         versionCode 33
-        versionName "11.2"
+        versionName "11.2-L2Lethal-1"
+    }
+
+    // L2 Lethal: firma fija (la llave viene del secreto L2_FIRMA de GitHub). Sin ella, firma de prueba.
+    signingConfigs {
+        l2lethal {
+            storeFile file(System.getenv("L2_KEYSTORE") ?: "sin-llave.jks")
+            storePassword System.getenv("L2_KEYPASS") ?: ""
+            keyAlias "l2lethal"
+            keyPassword System.getenv("L2_KEYPASS") ?: ""
+        }
     }
 
     buildTypes {
         debug {
+            if (System.getenv("L2_KEYSTORE")) signingConfig signingConfigs.l2lethal
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 

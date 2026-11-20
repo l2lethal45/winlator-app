@@ -72,8 +72,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             navigationView.setCheckedItem(R.id.menu_item_input_controls);
         }
         else {
-            boolean showShortcutsFirst = preferences.getBoolean("show_shortcuts_first", false);
+            boolean showShortcutsFirst = preferences.getBoolean("show_shortcuts_first", true);
             int selectedMenuItemId = intent.getIntExtra("selected_menu_item_id", 0);
+            // L2 Lethal: al abrir la app desde el icono, abrir el launcher directo (no al volver del juego)
+            com.winlator.l2lethal.L2LethalSetup.autoStartPending = savedInstanceState == null && selectedMenuItemId == 0 &&
+                !intent.getBooleanExtra("restarted", false) && intent.getIntExtra("container_id", 0) == 0;
             int menuItemId = selectedMenuItemId > 0 ? selectedMenuItemId : (showShortcutsFirst ? R.id.menu_item_shortcuts : R.id.menu_item_containers);
 
             actionBar.setHomeAsUpIndicator(R.drawable.icon_action_bar_menu);

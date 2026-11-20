@@ -22,6 +22,8 @@ jobs:
           java-version: 17
 
       - name: Compilar
+        env:
+          L2_FIRMA: ${{ secrets.L2_FIRMA }}
         run: |
           mkdir -p logs
           exec > >(tee logs/build.log) 2>&1
@@ -31,8 +33,31 @@ jobs:
           yes | $SDKM --licenses > /dev/null 2>&1 || true
           $SDKM "ndk;24.0.8215888" "cmake;3.22.1" "platforms;android-35" "build-tools;35.0.0" | tail -5
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          set +x
+          if [ -n "$L2_FIRMA" ]; then
+            echo "$L2_FIRMA" | cut -d'|' -f2 | base64 -d > "$RUNNER_TEMP/l2lethal.jks"
+            export L2_KEYSTORE="$RUNNER_TEMP/l2lethal.jks"
+            export L2_KEYPASS="$(echo "$L2_FIRMA" | cut -d'|' -f1)"
+            echo "Firma L2 Lethal: SI"
+          else
+            echo "Firma L2 Lethal: NO (APK de prueba, no se publica)"
+          fi
+          set -x
           chmod +x gradlew
           ./gradlew --no-daemon --stacktrace assembleDebug
+
+      - name: Publicar APK (solo si esta firmado con la llave de L2 Lethal)
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          L2_FIRMA: ${{ secrets.L2_FIRMA }}
+        run: |
+          if [ -z "$L2_FIRMA" ]; then echo "Sin firma: no se publica"; exit 0; fi
+          cp app/build/outputs/apk/debug/app-debug.apk L2Lethal.apk
+          sha256sum L2Lethal.apk | tee -a logs/build.log
+          gh release create "build-${{ github.run_number }}" L2Lethal.apk --repo "${{ github.repository }}" \
+            --title "L2 Lethal Android - build ${{ github.run_number }}" \
+            --notes "Winlator 11.2 modificado para L2 Lethal (commit ${{ github.sha }}). Codigo fuente: este repositorio (LGPL 2.1)." --latest
 
       - name: Guardar APK
         if: success()

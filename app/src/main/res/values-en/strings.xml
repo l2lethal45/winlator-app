@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="l2lethal_preparing">Preparing L2 Lethal...</string>
+    <string name="l2lethal_setup_error">Could not prepare L2 Lethal. Close and open the app again.</string>
+    <string name="l2lethal_downloading_net">Downloading .NET components (85 MB, first time only)...</string>
+    <string name="l2lethal_net_error">Could not download .NET. Check your internet and open the app again.</string>
+</resources>

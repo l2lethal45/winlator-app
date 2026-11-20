@@ -20,3 +20,17 @@ For more information and releases, please visit the main repository: https://git
 
 Special thanks to all the developers involved in these projects.<br>
 Thank you to all the people who believe in this project.
+----
+
+# L2 Lethal (versión modificada)
+
+Este repositorio es una copia modificada de [Winlator](https://github.com/brunodev85/winlator-app) (LGPL 2.1) para jugar al servidor **L2 Lethal** (www.l2lethal.com) desde Android.
+
+Cambios respecto al original:
+- Nombre "L2 Lethal", ícono propio y `applicationId` `com.l2lethal.mobile` (convive con el Winlator normal).
+- Al abrirse por primera vez crea solo el contenedor "L2 Lethal" (1920x1080; Turnip+Zink en GPU Adreno), el perfil de controles "Lineage 2" y el acceso directo al launcher de L2 Lethal.
+- Descarga Wine Mono 10.1.0 (.NET) para que el launcher funcione.
+- Al abrir la app desde el ícono, abre directamente el launcher.
+- El código está en `app/src/main/java/com/winlator/l2lethal/`.
+
+El APK se compila con GitHub Actions (`.github/workflows/build.yml`).

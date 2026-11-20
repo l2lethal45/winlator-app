@@ -71,6 +71,7 @@ public abstract class AppUtils {
     public static void restartApplication(Context context, RestartApplicationOptions options) {
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         Intent mainIntent = Intent.makeRestartActivityTask(intent.getComponent());
+        mainIntent.putExtra("restarted", true);
 
         if (options != null) {
             if (options.selectedMenuItemId > 0) mainIntent.putExtra("selected_menu_item_id", options.selectedMenuItemId);

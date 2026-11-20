@@ -5,11 +5,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'com.l2lethal.mobile'
+        applicationId 'com.l2lethal'
         minSdkVersion 26
         targetSdkVersion 28
-        versionCode 36
-        versionName "11.2-L2Lethal-4"
+        versionCode 37
+        versionName "11.2-L2Lethal-5"
     }
 
     // L2 Lethal: firma fija (la llave viene del secreto L2_FIRMA de GitHub). Sin ella, firma de prueba.

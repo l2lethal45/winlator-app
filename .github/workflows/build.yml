@@ -43,6 +43,8 @@ jobs:
             echo "Firma L2 Lethal: NO (APK de prueba, no se publica)"
           fi
           set -x
+          python3 -m pip install -q --break-system-packages zstandard || python3 -m pip install -q zstandard || exit 1
+          python3 tools/l2_repath.py app/src/main/assets || exit 1
           chmod +x gradlew
           ./gradlew --no-daemon --stacktrace assembleDebug
 
@@ -54,6 +56,7 @@ jobs:
         run: |
           if [ -z "$L2_FIRMA" ]; then echo "Sin firma: no se publica"; exit 0; fi
           cp app/build/outputs/apk/debug/app-debug.apk L2Lethal.apk
+          python3 tools/l2_check_apk.py L2Lethal.apk | tee -a logs/build.log || exit 1
           sha256sum L2Lethal.apk | tee -a logs/build.log
           gh release create "build-${{ github.run_number }}" L2Lethal.apk --repo "${{ github.repository }}" \
             --title "L2 Lethal Android - build ${{ github.run_number }}" \

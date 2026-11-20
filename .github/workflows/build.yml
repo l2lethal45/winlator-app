@@ -6,6 +6,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,12 +24,26 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: NDK y CMake
-        run: sdkmanager "ndk;24.0.8215888" "cmake;3.22.1" "platforms;android-35" "build-tools;35.0.0" > /dev/null
+        run: |
+          mkdir -p logs
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "ndk;24.0.8215888" "cmake;3.22.1" "platforms;android-35" "build-tools;35.0.0" > logs/sdk.log 2>&1 || (tail -50 logs/sdk.log; exit 1)
 
       - name: Compilar
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug
+          set -o pipefail
+          ./gradlew --no-daemon --stacktrace assembleDebug 2>&1 | tee logs/build.log
+
+      - name: Guardar registro (rama logs)
+        if: always()
+        run: |
+          mkdir -p /tmp/l && cp -r logs/* /tmp/l/ 2>/dev/null || true
+          echo "${{ job.status }} $(date -u) ${{ github.sha }}" > /tmp/l/resultado.txt
+          ls app/build/outputs/apk/debug/ >> /tmp/l/resultado.txt 2>/dev/null || true
+          cd /tmp/l && git init -q && git checkout -q -b logs
+          git -c user.name=ci -c user.email=ci@local add -A && git -c user.name=ci -c user.email=ci@local commit -q -m "log ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" logs
 
       - name: Guardar APK
         uses: actions/upload-artifact@v4

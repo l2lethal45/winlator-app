@@ -30,7 +30,7 @@ def repath(path):
     tar = out.getvalue()
     assert OLD not in tar
     with open(path, "wb") as f:
-        f.write(zstandard.ZstdCompressor(level=10, threads=-1).compress(tar))
+        f.write(zstandard.ZstdCompressor(level=19, threads=-1).compress(tar))
     return changed
 
 if __name__ == "__main__":

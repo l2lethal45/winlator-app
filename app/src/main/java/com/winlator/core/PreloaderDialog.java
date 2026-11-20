@@ -52,6 +52,22 @@ public class PreloaderDialog {
         catch (Exception e) {}
     }
 
+    /** L2 Lethal: titulo + barra (percent < 0 = sin barra) + detalle. Se puede llamar desde cualquier hilo. */
+    public void setStatusOnUiThread(final String title, final int percent, final String detail) {
+        activity.runOnUiThread(() -> {
+            synchronized (PreloaderDialog.this) {
+                if (dialog == null || !dialog.isShowing()) return;
+                ((TextView)dialog.findViewById(R.id.TextView)).setText(title);
+                android.widget.ProgressBar bar = dialog.findViewById(R.id.L2ProgressBar);
+                bar.setVisibility(percent >= 0 ? android.view.View.VISIBLE : android.view.View.GONE);
+                if (percent >= 0) bar.setProgress(percent);
+                TextView tv = dialog.findViewById(R.id.L2Detail);
+                tv.setVisibility(detail != null && !detail.isEmpty() ? android.view.View.VISIBLE : android.view.View.GONE);
+                tv.setText(detail != null ? detail : "");
+            }
+        });
+    }
+
     public void closeOnUiThread() {
         activity.runOnUiThread(this::close);
     }

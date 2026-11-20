@@ -4,4 +4,10 @@
     <string name="l2lethal_setup_error">Could not prepare L2 Lethal. Close and open the app again.</string>
     <string name="l2lethal_downloading_net">Downloading .NET components (85 MB, first time only)...</string>
     <string name="l2lethal_net_error">Could not download .NET. Check your internet and open the app again.</string>
+    <string name="l2lethal_boot_title">Preparing L2 Lethal (first time only)</string>
+    <string name="l2lethal_boot_detail">Starting Windows... %1$s\nThis can take a few minutes. Do not close the app.</string>
+    <string name="l2lethal_net_title">Installing .NET: %1$d%%</string>
+    <string name="l2lethal_net_detail">%1$d of %2$d MB · %3$s\nFirst time only. Do not close the app.</string>
+    <string name="l2lethal_opening">Opening L2 Lethal...</string>
+    <string name="l2lethal_stuck">It seems stuck. Close the app from Recents and open it again.</string>
 </resources>

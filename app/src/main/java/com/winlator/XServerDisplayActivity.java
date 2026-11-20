@@ -231,6 +231,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         preloaderDialog.show(R.string.starting_up);
+        if (container != null && com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(container.getName())) {
+            com.winlator.l2lethal.StartupMonitor.start(this, preloaderDialog, container);
+        }
 
         inputControlsManager = new InputControlsManager(this);
         xServer = new XServer(this, screenInfo);

@@ -303,4 +303,10 @@
     <string name="l2lethal_setup_error">Não foi possível preparar o L2 Lethal. Feche e abra o app novamente.</string>
     <string name="l2lethal_downloading_net">Baixando componentes do .NET (85 MB, só na primeira vez)...</string>
     <string name="l2lethal_net_error">Não foi possível baixar o .NET. Verifique sua internet e abra o app novamente.</string>
+    <string name="l2lethal_boot_title">Preparando o L2 Lethal (só na primeira vez)</string>
+    <string name="l2lethal_boot_detail">Iniciando o Windows... %1$s\nPode levar alguns minutos. Não feche o app.</string>
+    <string name="l2lethal_net_title">Instalando o .NET: %1$d%%</string>
+    <string name="l2lethal_net_detail">%1$d de %2$d MB · %3$s\nSó na primeira vez. Não feche o app.</string>
+    <string name="l2lethal_opening">Abrindo o L2 Lethal...</string>
+    <string name="l2lethal_stuck">Parece que travou. Feche o app pelos Recentes e abra novamente.</string>
 </resources>

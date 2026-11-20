@@ -8,8 +8,8 @@ android {
         applicationId 'com.l2lethal.mobile'
         minSdkVersion 26
         targetSdkVersion 28
-        versionCode 33
-        versionName "11.2-L2Lethal-1"
+        versionCode 34
+        versionName "11.2-L2Lethal-2"
     }
 
     // L2 Lethal: firma fija (la llave viene del secreto L2_FIRMA de GitHub). Sin ella, firma de prueba.

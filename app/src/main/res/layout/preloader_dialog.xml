@@ -25,11 +25,36 @@
             android:layout_marginRight="16dp"
             android:indeterminateDrawable="?attr/progressBarIndeterminateImage" />
 
-        <TextView
-            android:id="@+id/TextView"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="20dp"
-            android:textColor="?attr/colorPrimaryText" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/TextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:textColor="?attr/colorPrimaryText" />
+
+            <!-- L2 Lethal: barra y detalle del primer arranque (ocultos en Winlator normal) -->
+            <ProgressBar
+                android:id="@+id/L2ProgressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="280dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:max="100"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/L2Detail"
+                android:layout_width="280dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textSize="13dp"
+                android:textColor="?attr/colorPrimaryText"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

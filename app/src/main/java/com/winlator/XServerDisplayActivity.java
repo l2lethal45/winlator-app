@@ -272,12 +272,25 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         setupUI();
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            if (!isGenerateWineprefix()) {
-                setupWineSystemFiles();
-                extractGraphicsDriverFiles();
-                changeWineAudioDriver();
+            L2("[L2] arranque: drivers=" + (graphicsDriver != null ? String.join(",", graphicsDriver) : "?") + " dx=" + dxwrapper + " audio=" + audioDriver + " wine=" + (container != null ? container.getWineVersion() : "?") + " winePath=" + rootFS.getWinePath()
+                + " monoMsi=" + new java.io.File(rootFS.getRootDir(), rootFS.getWinePath() + "/share/wine/mono/wine-mono-10.1.0-x86.msi").length()
+                + " monoMsiOpt=" + new java.io.File(rootFS.getRootDir(), "opt/wine/share/wine/mono/wine-mono-10.1.0-x86.msi").length());
+            try {
+                if (!isGenerateWineprefix()) {
+                    L2("[L2] setupWineSystemFiles...");
+                    setupWineSystemFiles();
+                    L2("[L2] extractGraphicsDriverFiles...");
+                    extractGraphicsDriverFiles();
+                    L2("[L2] changeWineAudioDriver...");
+                    changeWineAudioDriver();
+                }
+                L2("[L2] setupXEnvironment...");
+                setupXEnvironment();
+                L2("[L2] entorno iniciado");
             }
-            setupXEnvironment();
+            catch (Throwable e) {
+                L2("[L2] ERROR en el arranque: " + android.util.Log.getStackTraceString(e));
+            }
         });
     }
 
@@ -507,7 +520,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         String wineDebugChannels = preferences.getString("wine_debug_channels", SettingsFragment.DEFAULT_WINE_DEBUG_CHANNELS);
         envVars.put("WINEDEBUG", enableWineDebug && !wineDebugChannels.isEmpty() ? "+"+wineDebugChannels.replace(",", ",+") : "-all");
         // L2 Lethal: dejar los errores de Wine (err) en el registro que se puede enviar desde la pantalla de arranque
-        if (!enableWineDebug && container != null && com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(container.getName())) envVars.put("WINEDEBUG", "fixme-all,+mscoree");
+        if (!enableWineDebug && isL2Container()) {
+            envVars.put("WINEDEBUG", "fixme-all,+loaddll,+mscoree");
+            envVars.put("BOX64_LOG", "1");
+            envVars.put("BOX64_NOBANNER", "0");
+            envVars.put("BOX64_SHOWSEGV", "1");
+        }
 
         FileUtils.clear(rootFS.getTmpDir());
 
@@ -562,7 +580,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         guestProgramLauncherComponent.setEnvVars(envVars);
-        guestProgramLauncherComponent.setTerminationCallback((status) -> exit());
+        L2("[L2] guest: " + guestProgramLauncherComponent.getGuestExecutable() + " | box64Preset=" + guestProgramLauncherComponent.getBox64Preset());
+        guestProgramLauncherComponent.setTerminationCallback((status) -> { L2("[L2] Wine termino, estado " + status); exit(); });
         environment.addComponent(guestProgramLauncherComponent);
 
         if (isGenerateWineprefix()) {
@@ -952,6 +971,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     private boolean isGenerateWineprefix() {
         return getIntent().getBooleanExtra("generate_wineprefix", false);
+    }
+
+    private boolean isL2Container() {
+        return container != null && com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(container.getName());
+    }
+
+    private void L2(String line) {
+        if (isL2Container()) com.winlator.l2lethal.StartupMonitor.log(line);
     }
 
     private String getWineStartCommand() {

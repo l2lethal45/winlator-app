@@ -234,6 +234,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (container != null && com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(container.getName())) {
             com.winlator.core.ProcessHelper.addDebugCallback(com.winlator.l2lethal.StartupMonitor.openLog(this));
             com.winlator.l2lethal.StartupMonitor.start(this, preloaderDialog, container);
+            ((NavigationView)findViewById(R.id.NavigationView)).getMenu().findItem(R.id.menu_item_l2_send_log).setVisible(true);
         }
 
         inputControlsManager = new InputControlsManager(this);
@@ -428,6 +429,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 break;
             case R.id.menu_item_logs:
                 debugDialog.show();
+                drawerLayout.closeDrawers();
+                break;
+            case R.id.menu_item_l2_send_log:
+                com.winlator.l2lethal.StartupMonitor.shareLog(this, container);
                 drawerLayout.closeDrawers();
                 break;
             case R.id.menu_item_touchpad_help:

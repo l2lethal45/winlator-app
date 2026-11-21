@@ -33,7 +33,7 @@ public final class StartupMonitor {
     private static final long STUCK_BOOT_MS = 10 * 60 * 1000L;
 
     private static final long SHOW_LOG_BUTTON_MS = 3 * 60 * 1000L;
-    private static final long MAX_LOG_BYTES = 3L * 1024 * 1024;
+    private static final long MAX_LOG_BYTES = 20L * 1024 * 1024; // el reporte manda solo el final (1,5 MB)
     public static final String LOG_FILE = "l2lethal_registro.txt";
 
     private static OutputStream logOut;
@@ -64,9 +64,48 @@ public final class StartupMonitor {
         catch (Exception e) {}
     }
 
-    private static void shareLog(Activity activity) {
+    private static void shareLog(Activity activity) { shareLog(activity, null); }
+
+    /**
+     * Manda el registro del arranque + lo que el juego escribio en su propio L2.log (System\L2.log y "System l2 Lethal"\L2.log)
+     * + las lineas importantes del Option.ini. Sirve para ver por que el juego se queda en la pantalla de Lineage II.
+     * Se puede usar en cualquier momento desde el menu lateral (boton Atras) mientras el juego esta abierto.
+     */
+    public static void shareLog(Activity activity, Container container) {
         try {
             File f = new File(activity.getFilesDir(), LOG_FILE);
+            if (container != null) {
+                File rep = new File(activity.getFilesDir(), "l2lethal_reporte.txt");
+                StringBuilder sb = new StringBuilder();
+                synchronized (StartupMonitor.class) { if (logOut != null) logOut.flush(); }
+                sb.append(tail(f, 1500000)).append("\n\n");
+                File game = new File(container.getRootDir(), ".wine/drive_c/" + L2LethalSetup.GAME_DIR);
+                File[] dirs = game.listFiles();
+                if (dirs != null) for (File d : dirs) {
+                    if (!d.isDirectory() || !d.getName().toLowerCase().startsWith("system")) continue;
+                    File[] fs = d.listFiles();
+                    if (fs == null) continue;
+                    for (File x : fs) {
+                        String n = x.getName().toLowerCase();
+                        if (n.equals("l2.log") || n.equals("option.ini")) {
+                            sb.append("===== ").append(d.getName()).append("/").append(x.getName())
+                              .append(" (").append(x.length()).append(" bytes, ").append(new java.util.Date(x.lastModified())).append(") =====\n");
+                            if (n.equals("l2.log")) sb.append(tail(x, 120000));
+                            else for (String l : tail(x, 60000).split("\n")) {
+                                String k = l.toLowerCase();
+                                if (k.startsWith("gameplayviewport") || k.startsWith("startupfullscreen") || k.startsWith("colorbits") || k.startsWith("gpuanimation")
+                                    || k.startsWith("renderdevice") || k.startsWith("[") || k.startsWith("usehardware") || k.startsWith("refreshrate"))
+                                    sb.append(l).append("\n");
+                            }
+                            sb.append("\n");
+                        }
+                    }
+                }
+                else sb.append("No existe la carpeta del juego: ").append(game).append("\n");
+                java.io.FileOutputStream o = new java.io.FileOutputStream(rep, false);
+                o.write(sb.toString().getBytes(StandardCharsets.UTF_8)); o.close();
+                f = rep;
+            }
             Uri uri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".FileProvider", f);
             Intent send = new Intent(Intent.ACTION_SEND);
             send.setType("text/plain");
@@ -76,6 +115,18 @@ public final class StartupMonitor {
             activity.startActivity(Intent.createChooser(send, activity.getString(R.string.l2lethal_send_log)));
         }
         catch (Exception e) {}
+    }
+
+    /** Ultimos maxBytes de un archivo, como texto (L2.log del juego viene en UTF-16). */
+    private static String tail(File f, int maxBytes) {
+        try (java.io.RandomAccessFile r = new java.io.RandomAccessFile(f, "r")) {
+            long len = r.length(); long from = Math.max(0, len - maxBytes);
+            byte[] b = new byte[(int)(len - from)]; r.seek(from); r.readFully(b);
+            int zeros = 0; for (int i = 1; i < Math.min(b.length, 400); i += 2) if (b[i] == 0) zeros++;
+            if (zeros > 50) { if ((from & 1) == 1 && b.length > 0) b = java.util.Arrays.copyOfRange(b, 1, b.length); return new String(b, StandardCharsets.UTF_16LE); }
+            return new String(b, StandardCharsets.UTF_8);
+        }
+        catch (Exception e) { return "(no se pudo leer " + f.getName() + ": " + e + ")\n"; }
     }
 
     public static void start(final Activity activity, final PreloaderDialog dialog, final Container container) {

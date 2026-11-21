@@ -206,6 +206,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.menu_item_about:
                 (new AboutDialog(this)).show();
                 break;
+            case R.id.menu_item_l2_send_log_main: {
+                com.winlator.container.Container l2 = null;
+                for (com.winlator.container.Container c : new com.winlator.container.ContainerManager(this).getContainers())
+                    if (com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(c.getName())) { l2 = c; break; }
+                com.winlator.l2lethal.StartupMonitor.shareLog(this, l2);
+                return true;
+            }
         }
         return true;
     }

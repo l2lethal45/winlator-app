@@ -45,7 +45,13 @@ public final class StartupMonitor {
     public static synchronized Callback<String> openLog(Activity activity) {
         try {
             if (logOut != null) logOut.close();
-            logOut = new FileOutputStream(new File(activity.getFilesDir(), LOG_FILE), false);
+            File cur = new File(activity.getFilesDir(), LOG_FILE);
+            if (cur.length() > 0) {
+                File prev = new File(activity.getFilesDir(), "l2lethal_registro_anterior.txt");
+                prev.delete();
+                cur.renameTo(prev);
+            }
+            logOut = new FileOutputStream(cur, false);
             logBytes = 0;
             log("L2 Lethal " + android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL + " Android " + android.os.Build.VERSION.RELEASE + " " + android.os.Build.HARDWARE);
         }
@@ -78,6 +84,11 @@ public final class StartupMonitor {
                 File rep = new File(activity.getFilesDir(), "l2lethal_reporte.txt");
                 StringBuilder sb = new StringBuilder();
                 synchronized (StartupMonitor.class) { if (logOut != null) logOut.flush(); }
+                sb.append("===== Contenedor: driver=").append(container.getGraphicsDriver()).append(" | dxwrapper=").append(container.getDXWrapper())
+                  .append(" | config=").append(container.getGraphicsDriverConfig()).append(" | pantalla=").append(container.getScreenSize())
+                  .append(" | ").append(android.os.Build.MANUFACTURER).append(" ").append(android.os.Build.MODEL).append(" ").append(android.os.Build.HARDWARE).append(" =====\n\n");
+                File prev = new File(activity.getFilesDir(), "l2lethal_registro_anterior.txt");
+                if (prev.isFile()) sb.append("===== SESION ANTERIOR (final) =====\n").append(tail(prev, 400000)).append("\n\n===== ULTIMA SESION =====\n");
                 sb.append(tail(f, 1500000)).append("\n\n");
                 File game = new File(container.getRootDir(), ".wine/drive_c/" + L2LethalSetup.GAME_DIR);
                 File[] dirs = game.listFiles();

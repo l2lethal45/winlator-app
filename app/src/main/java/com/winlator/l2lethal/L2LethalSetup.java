@@ -36,15 +36,16 @@ import java.util.concurrent.Executors;
 
 /**
  * L2 Lethal: deja todo listo sin que el jugador toque nada.
- *  1. Crea el contenedor "L2 Lethal" (1920x1080, Box64 Intermediate; Turnip+Zink+DXVK si la GPU es Adreno,
- *     si no Vortek+VirGL+WineD3D).
+ *  1. Crea el contenedor "L2 Lethal" (1920x1080; Adreno: Box64 Performance + Turnip/VirGL + DXVK;
+ *     resto: Box64 Intermediate + Vortek/VirGL + WineD3D).
  *  2. Copia el launcher a C:\L2 Lethal\ y crea el acceso "L2 Lethal" (con el perfil de controles "Lineage 2").
  *  3. Baja Wine Mono (.NET) para que el launcher funcione; Wine lo instala solo la primera vez.
  *  4. Abre el launcher directo (al abrir la app desde el icono).
  */
 public final class L2LethalSetup {
     public static final String CONTAINER_NAME = "L2 Lethal";
-    public static final String SHORTCUT_NAME = "L2 Lethal";
+    public static final String SHORTCUT_NAME = "L2 Lethal Launcher"; // mismo nombre que el que crea el launcher
+    private static final String LEGACY_SHORTCUT_NAME = "L2 Lethal"; // builds viejos: quedaba repetido con el del launcher
     public static final String GAME_DIR = "L2 Lethal";
     public static final String LAUNCHER_EXE = "L2 Lethal Launcher.exe";
     public static final int CONTROLS_PROFILE_ID = 10; // assets/inputcontrols/profiles/controls-10.icp ("Lineage 2")
@@ -86,12 +87,10 @@ public final class L2LethalSetup {
             JSONObject data = new JSONObject();
             data.put("name", CONTAINER_NAME);
             data.put("screenSize", SCREEN_SIZE);
-            data.put("box64Preset", Box64Preset.INTERMEDIATE);
-            if (isAdreno(activity)) data.put("graphicsDriver", "turnip,zink");
-            else {
-                data.put("graphicsDriver", GraphicsDrivers.VORTEK + "," + GraphicsDrivers.VIRGL);
-                data.put("dxwrapper", DXWrappers.WINED3D);
-            }
+            boolean adreno = isAdreno(activity);
+            data.put("box64Preset", adreno ? Box64Preset.PERFORMANCE : Box64Preset.INTERMEDIATE);
+            data.put("graphicsDriver", (adreno ? GraphicsDrivers.TURNIP : GraphicsDrivers.VORTEK) + "," + GraphicsDrivers.VIRGL);
+            data.put("dxwrapper", adreno ? DXWrappers.DXVK : DXWrappers.WINED3D);
             final DownloadProgressDialog dialog = new DownloadProgressDialog(activity);
             dialog.show(R.string.l2lethal_preparing);
             manager.createContainerAsync(data, (container) -> {
@@ -113,7 +112,7 @@ public final class L2LethalSetup {
     }
 
     /** Version de la config recomendada; subirla cuando cambien los valores de abajo. */
-    private static final int CONFIG_VERSION = 2;
+    private static final int CONFIG_VERSION = 3;
 
     /**
      * Arregla contenedores creados por versiones viejas de la app (preset Performance de Box64
@@ -125,11 +124,12 @@ public final class L2LethalSetup {
         try {
             int version = Integer.parseInt(container.getExtra("l2ConfigVersion", "1"));
             if (version >= CONFIG_VERSION) return;
-            container.setBox64Preset(Box64Preset.INTERMEDIATE);
-            if (!isAdreno(context)) {
-                container.setGraphicsDriver(GraphicsDrivers.VORTEK + "," + GraphicsDrivers.VIRGL);
-                container.setDXWrapper(DXWrappers.WINED3D);
-            }
+            // Adreno (probado en S23 Ultra): Performance + Turnip/VirGL + DXVK.
+            // Resto (Exynos/Xclipse, Mali; probado en S24 FE): Intermediate + Vortek/VirGL + WineD3D.
+            boolean adreno = isAdreno(context);
+            container.setBox64Preset(adreno ? Box64Preset.PERFORMANCE : Box64Preset.INTERMEDIATE);
+            container.setGraphicsDriver((adreno ? GraphicsDrivers.TURNIP : GraphicsDrivers.VORTEK) + "," + GraphicsDrivers.VIRGL);
+            container.setDXWrapper(adreno ? DXWrappers.DXVK : DXWrappers.WINED3D);
             container.putExtra("l2ConfigVersion", String.valueOf(CONFIG_VERSION));
             container.saveData();
         }
@@ -165,8 +165,11 @@ public final class L2LethalSetup {
                 // 2) acceso directo "L2 Lethal" -> launcher, con los controles de Lineage 2
                 File desktop = new File(container.getUserDir(), "Desktop");
                 desktop.mkdirs();
+                File legacy = new File(desktop, LEGACY_SHORTCUT_NAME + ".desktop");
+                if (legacy.isFile()) legacy.delete();
+                removeDuplicateLaunchers(desktop);
                 File shortcut = new File(desktop, SHORTCUT_NAME + ".desktop");
-                if (!shortcut.isFile()) {
+                if (findLauncherShortcut(desktop) == null) {
                     String iconName = saveIcon(activity, container) ? "l2lethal" : null;
                     String exe = "C:\\" + GAME_DIR + "\\" + LAUNCHER_EXE;
                     String esc = exe.replace("\\", "\\\\\\\\").replace(" ", "\\\\ ");
@@ -213,14 +216,42 @@ public final class L2LethalSetup {
     }
 
     public static void startGame(MainActivity activity, Container container) {
-        File shortcut = new File(new File(container.getUserDir(), "Desktop"), SHORTCUT_NAME + ".desktop");
-        if (!shortcut.isFile()) return;
+        File shortcut = findLauncherShortcut(new File(container.getUserDir(), "Desktop"));
+        if (shortcut == null) return;
         Intent intent = new Intent(activity, XServerDisplayActivity.class);
         intent.putExtra("container_id", container.id);
         intent.putExtra("shortcut_path", shortcut.getPath());
         activity.startActivity(intent);
     }
 
+    private static boolean isLauncherShortcut(String content) {
+        return content != null && content.toLowerCase().contains("launcher.exe");
+    }
+
+    /** El acceso del launcher (el que crea la app o el que crea el launcher), o null. */
+    private static File findLauncherShortcut(File desktop) {
+        File[] files = desktop.listFiles();
+        if (files == null) return null;
+        java.util.Arrays.sort(files);
+        for (File file : files) {
+            if (file.getName().endsWith(".desktop") && isLauncherShortcut(FileUtils.readString(file))) return file;
+        }
+        return null;
+    }
+
+    private static void removeDuplicateLaunchers(File desktop) {
+        File keep = findLauncherShortcut(desktop);
+        File[] files = desktop.listFiles();
+        if (keep == null || files == null) return;
+        for (File file : files) {
+            if (!file.equals(keep) && file.getName().endsWith(".desktop") && isLauncherShortcut(FileUtils.readString(file))) file.delete();
+        }
+    }
+
+    /**
+     * Launcher: emblema de L2 Lethal. Los demas (p.ej. "L2 Lethal - Jugar"): el icono de su .exe;
+     * si no se puede sacar, el emblema.
+     */
     private static void fixShortcutIcons(Context context, Container container, File desktop) {
         File[] files = desktop.listFiles();
         if (files == null) return;
@@ -229,16 +260,26 @@ public final class L2LethalSetup {
             if (!file.getName().endsWith(".desktop")) continue;
             String content = FileUtils.readString(file);
             if (content == null || content.isEmpty()) continue;
-            String iconName = null;
+            String iconName = null, exec = null;
             for (String line : content.split("\n")) {
-                if (line.startsWith("Icon=")) { iconName = line.substring(5).trim(); break; }
+                if (iconName == null && line.startsWith("Icon=")) iconName = line.substring(5).trim();
+                if (exec == null && line.startsWith("Exec=")) exec = line.substring(5).trim();
             }
-            if (iconName != null && hasIcon(container, iconName)) continue;
-            if (!iconReady) iconReady = saveIcon(context, container);
-            if (!iconReady) return;
+            boolean launcher = isLauncherShortcut(content);
+            String wanted = null;
+            if (!launcher && (iconName == null || iconName.equals("l2lethal") || !hasIcon(container, iconName))) {
+                wanted = ExeIcon.saveFromShortcut(container, exec); // nombre del icono guardado, o null
+            }
+            if (wanted == null) {
+                if (iconName != null && hasIcon(container, iconName)) continue;
+                if (!iconReady) iconReady = saveIcon(context, container);
+                if (!iconReady) continue;
+                wanted = "l2lethal";
+            }
+            if (wanted.equals(iconName)) continue;
             String fixed;
-            if (iconName != null) fixed = content.replaceFirst("(?m)^Icon=.*$", "Icon=l2lethal");
-            else fixed = content.replaceFirst("(?m)^\\[Desktop Entry\\][ \\t\\r]*$", "[Desktop Entry]\nIcon=l2lethal");
+            if (iconName != null) fixed = content.replaceFirst("(?m)^Icon=.*$", "Icon=" + wanted);
+            else fixed = content.replaceFirst("(?m)^\\[Desktop Entry\\][ \\t\\r]*$", "[Desktop Entry]\nIcon=" + wanted);
             if (!fixed.equals(content)) FileUtils.writeString(file, fixed);
         }
     }

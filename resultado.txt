@@ -1,0 +1,6 @@
+success Thu Nov 26 23:31:09 UTC 2026 3871636e0030c5068461c060905cb50673ea6173
+total 167168
+drwxr-xr-x 2 runner runner      4096 Nov 26 23:30 .
+drwxr-xr-x 3 runner runner      4096 Nov 26 23:30 ..
+-rw-r--r-- 1 runner runner 171166546 Nov 26 23:30 app-debug.apk
+-rw-r--r-- 1 runner runner       408 Nov 26 23:30 output-metadata.json

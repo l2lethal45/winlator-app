@@ -86,7 +86,8 @@ public class ShortcutSettingsDialog extends ContentDialog {
         Box64PresetManager.loadSpinner(sBox64Preset, shortcut.getExtra("box64Preset", shortcut.container.getBox64Preset()));
 
         final Spinner sControlsProfile = findViewById(R.id.SControlsProfile);
-        loadControlsProfileSpinner(sControlsProfile, shortcut.getExtra("controlsProfile", "0"));
+        loadControlsProfileSpinner(sControlsProfile, shortcut.getExtra("controlsProfile",
+            com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(shortcut.container.getName()) ? String.valueOf(com.winlator.l2lethal.L2LethalSetup.CONTROLS_PROFILE_ID) : "0"));
 
         final Spinner sDInputMapperType = findViewById(R.id.SDInputMapperType);
         sDInputMapperType.setSelection(Byte.parseByte(shortcut.getExtra("dinputMapperType", String.valueOf(GamepadHandler.DINPUT_MAPPER_TYPE_XINPUT))));
@@ -161,7 +162,7 @@ public class ShortcutSettingsDialog extends ContentDialog {
 
             ArrayList<ControlsProfile> profiles = inputControlsManager.getProfiles(true);
             int controlsProfile = sControlsProfile.getSelectedItemPosition() > 0 ? profiles.get(sControlsProfile.getSelectedItemPosition()-1).id : 0;
-            shortcut.putExtra("controlsProfile", controlsProfile > 0 ? String.valueOf(controlsProfile) : null);
+            shortcut.putExtra("controlsProfile", controlsProfile > 0 ? String.valueOf(controlsProfile) : "0"); // "0" = None elegido a mano
 
             int dinputMapperType = sDInputMapperType.getSelectedItemPosition();
             shortcut.putExtra("dinputMapperType", dinputMapperType != GamepadHandler.DINPUT_MAPPER_TYPE_XINPUT ? String.valueOf(dinputMapperType) : null);

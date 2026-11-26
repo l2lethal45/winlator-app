@@ -86,6 +86,14 @@ public class InputControlsManager {
                 if (targetFile != null) {
                     FileUtils.copy(context, assetPath, targetFile);
                 }
+                else {
+                    // perfil nuevo de la app (p.ej. "Lineage 2"): agregarlo si ese id no esta ocupado
+                    boolean idTaken = false;
+                    for (File file : files) {
+                        if (loadProfile(context, file).id == originProfile.id) { idTaken = true; break; }
+                    }
+                    if (!idTaken) FileUtils.copy(context, assetPath, new File(profilesDir, assetFile));
+                }
             }
         }
         catch (IOException e) {}

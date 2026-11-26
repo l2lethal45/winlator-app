@@ -651,7 +651,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         if (shortcut != null) {
             String controlsProfile = shortcut.getExtra("controlsProfile");
-            if (!controlsProfile.isEmpty()) {
+            // L2 Lethal: los accesos que crea el launcher ("L2 Lethal - Jugar") no traen perfil -> "Lineage 2".
+            // "0" = el jugador eligio None a proposito.
+            if (controlsProfile.isEmpty() && com.winlator.l2lethal.L2LethalSetup.CONTAINER_NAME.equals(container.getName()))
+                controlsProfile = String.valueOf(com.winlator.l2lethal.L2LethalSetup.CONTROLS_PROFILE_ID);
+            if (!controlsProfile.isEmpty() && !controlsProfile.equals("0")) {
                 ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
                 if (profile != null) showInputControls(profile);
             }

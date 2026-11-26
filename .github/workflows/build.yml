@@ -58,9 +58,10 @@ jobs:
           cp app/build/outputs/apk/debug/app-debug.apk L2Lethal.apk
           python3 tools/l2_check_apk.py L2Lethal.apk | tee -a logs/build.log || exit 1
           sha256sum L2Lethal.apk | tee -a logs/build.log
+          VC=$(grep -oP 'versionCode \K\d+' app/build.gradle)
           gh release create "build-${{ github.run_number }}" L2Lethal.apk --repo "${{ github.repository }}" \
             --title "L2 Lethal Android - build ${{ github.run_number }}" \
-            --notes "Winlator 11.2 modificado para L2 Lethal (commit ${{ github.sha }}). Codigo fuente: este repositorio (LGPL 2.1)." --latest
+            --notes "Winlator 11.2 modificado para L2 Lethal (commit ${{ github.sha }}). Codigo fuente: este repositorio (LGPL 2.1). versionCode=$VC" --latest
 
       - name: Guardar APK
         if: success()

@@ -374,4 +374,10 @@
     <string name="l2lethal_eta_min">quedan ~%1$d min</string>
     <string name="l2lethal_eta_less">queda menos de 1 min</string>
     <string name="l2lethal_eta_calc">calculando tiempo...</string>
+    <string name="l2lethal_update_title">Actualización de L2 Lethal</string>
+    <string name="l2lethal_update_message">Hay una versión nueva de la app con mejoras para que el juego abra mejor. Se descarga (≈170 MB) y luego tocas \"Instalar\". No se pierde el juego ni tu configuración.</string>
+    <string name="l2lethal_update_now">Actualizar</string>
+    <string name="l2lethal_update_later">Ahora no</string>
+    <string name="l2lethal_update_downloading">Descargando actualización...</string>
+    <string name="l2lethal_update_error">No se pudo descargar la actualización. Se intentará la próxima vez que abras la app.</string>
 </resources>

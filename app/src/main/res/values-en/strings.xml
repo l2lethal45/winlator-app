@@ -15,4 +15,10 @@
     <string name="l2lethal_eta_min">~%1$d min left</string>
     <string name="l2lethal_eta_less">less than 1 min left</string>
     <string name="l2lethal_eta_calc">estimating time...</string>
+    <string name="l2lethal_update_title">L2 Lethal update</string>
+    <string name="l2lethal_update_message">A new version of the app is available with fixes so the game opens better. It downloads (≈170 MB) and then you tap \"Install\". Your game and settings are kept.</string>
+    <string name="l2lethal_update_now">Update</string>
+    <string name="l2lethal_update_later">Not now</string>
+    <string name="l2lethal_update_downloading">Downloading update...</string>
+    <string name="l2lethal_update_error">Could not download the update. It will try again next time you open the app.</string>
 </resources>

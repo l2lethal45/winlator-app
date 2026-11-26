@@ -83,6 +83,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             onNavigationItemSelected(navigationView.getMenu().findItem(menuItemId));
             navigationView.setCheckedItem(menuItemId);
             if (!requestAppPermissions()) RootFSInstaller.installIfNeeded(this);
+            // L2 Lethal: revisar si hay version nueva de la app (solo al abrir, no al volver del juego)
+            if (savedInstanceState == null && !intent.getBooleanExtra("restarted", false))
+                com.winlator.l2lethal.UpdateChecker.checkOnStart(this);
 
             int containerId = intent.getIntExtra("container_id", 0);
             String startPath = intent.getStringExtra("start_path");

@@ -183,6 +183,9 @@ public final class L2LethalSetup {
                     FileUtils.writeString(shortcut, content);
                 }
 
+                // 2b) los accesos que crea el launcher ("L2 Lethal - Jugar", etc.) salen sin imagen: ponerles el emblema
+                fixShortcutIcons(activity, container, desktop);
+
                 // 3) Wine Mono (.NET): se deja donde Wine lo busca; Wine lo instala solo al abrir el launcher
                 if (needMono) {
                     monoDir.mkdirs();
@@ -216,6 +219,36 @@ public final class L2LethalSetup {
         intent.putExtra("container_id", container.id);
         intent.putExtra("shortcut_path", shortcut.getPath());
         activity.startActivity(intent);
+    }
+
+    private static void fixShortcutIcons(Context context, Container container, File desktop) {
+        File[] files = desktop.listFiles();
+        if (files == null) return;
+        boolean iconReady = new File(container.getIconsDir(64), "l2lethal.png").isFile();
+        for (File file : files) {
+            if (!file.getName().endsWith(".desktop")) continue;
+            String content = FileUtils.readString(file);
+            if (content == null || content.isEmpty()) continue;
+            String iconName = null;
+            for (String line : content.split("\n")) {
+                if (line.startsWith("Icon=")) { iconName = line.substring(5).trim(); break; }
+            }
+            if (iconName != null && hasIcon(container, iconName)) continue;
+            if (!iconReady) iconReady = saveIcon(context, container);
+            if (!iconReady) return;
+            String fixed;
+            if (iconName != null) fixed = content.replaceFirst("(?m)^Icon=.*$", "Icon=l2lethal");
+            else fixed = content.replaceFirst("(?m)^\\[Desktop Entry\\][ \\t\\r]*$", "[Desktop Entry]\nIcon=l2lethal");
+            if (!fixed.equals(content)) FileUtils.writeString(file, fixed);
+        }
+    }
+
+    private static boolean hasIcon(Container container, String name) {
+        if (name.isEmpty()) return false;
+        for (int size : new int[]{64, 48, 32, 24, 16, 128, 256}) {
+            if (new File(container.getIconsDir(size), name + ".png").isFile()) return true;
+        }
+        return false;
     }
 
     private static boolean saveIcon(Context context, Container container) {

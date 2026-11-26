@@ -8,7 +8,7 @@ public class Box64Preset {
     public static final String INTERMEDIATE = "INTERMEDIATE";
     public static final String PERFORMANCE = "PERFORMANCE";
     public static final String CUSTOM = "CUSTOM";
-    public static final String DEFAULT = PERFORMANCE;
+    public static final String DEFAULT = INTERMEDIATE; // L2 Lethal: Performance trababa el arranque en Exynos
     public final String id;
     public final String name;
 

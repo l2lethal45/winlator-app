@@ -11,7 +11,10 @@ import androidx.core.content.ContextCompat;
 import com.winlator.MainActivity;
 import com.winlator.R;
 import com.winlator.XServerDisplayActivity;
+import com.winlator.box64.Box64Preset;
 import com.winlator.container.Container;
+import com.winlator.container.DXWrappers;
+import com.winlator.container.GraphicsDrivers;
 import com.winlator.container.ContainerManager;
 import com.winlator.core.AppUtils;
 import com.winlator.core.DownloadProgressDialog;
@@ -33,7 +36,8 @@ import java.util.concurrent.Executors;
 
 /**
  * L2 Lethal: deja todo listo sin que el jugador toque nada.
- *  1. Crea el contenedor "L2 Lethal" (1920x1080; Turnip+Zink si el celular tiene GPU Adreno).
+ *  1. Crea el contenedor "L2 Lethal" (1920x1080, Box64 Intermediate; Turnip+Zink+DXVK si la GPU es Adreno,
+ *     si no Vortek+VirGL+WineD3D).
  *  2. Copia el launcher a C:\L2 Lethal\ y crea el acceso "L2 Lethal" (con el perfil de controles "Lineage 2").
  *  3. Baja Wine Mono (.NET) para que el launcher funcione; Wine lo instala solo la primera vez.
  *  4. Abre el launcher directo (al abrir la app desde el icono).
@@ -73,6 +77,7 @@ public final class L2LethalSetup {
         }
 
         if (found != null) {
+            applyRecommendedConfig(activity, found);
             prepare(activity, found);
             return;
         }
@@ -81,7 +86,12 @@ public final class L2LethalSetup {
             JSONObject data = new JSONObject();
             data.put("name", CONTAINER_NAME);
             data.put("screenSize", SCREEN_SIZE);
+            data.put("box64Preset", Box64Preset.INTERMEDIATE);
             if (isAdreno(activity)) data.put("graphicsDriver", "turnip,zink");
+            else {
+                data.put("graphicsDriver", GraphicsDrivers.VORTEK + "," + GraphicsDrivers.VIRGL);
+                data.put("dxwrapper", DXWrappers.WINED3D);
+            }
             final DownloadProgressDialog dialog = new DownloadProgressDialog(activity);
             dialog.show(R.string.l2lethal_preparing);
             manager.createContainerAsync(data, (container) -> {
@@ -91,12 +101,40 @@ public final class L2LethalSetup {
                     AppUtils.showToast(activity, R.string.l2lethal_setup_error);
                     return;
                 }
+                container.putExtra("l2ConfigVersion", String.valueOf(CONFIG_VERSION));
+                container.saveData();
                 prepare(activity, container);
             });
         }
         catch (Exception e) {
             running = false;
             AppUtils.showToast(activity, R.string.l2lethal_setup_error);
+        }
+    }
+
+    /** Version de la config recomendada; subirla cuando cambien los valores de abajo. */
+    private static final int CONFIG_VERSION = 2;
+
+    /**
+     * Arregla contenedores creados por versiones viejas de la app (preset Performance de Box64
+     * y DXVK en GPUs que no son Adreno: el juego se quedaba trabado al abrir).
+     * Probado 2026-11-26 en Galaxy S24 FE (Exynos 2400e / Xclipse 940): solo abre con
+     * Box64 Intermediate + WineD3D + VirGL.
+     */
+    private static void applyRecommendedConfig(Context context, Container container) {
+        try {
+            int version = Integer.parseInt(container.getExtra("l2ConfigVersion", "1"));
+            if (version >= CONFIG_VERSION) return;
+            container.setBox64Preset(Box64Preset.INTERMEDIATE);
+            if (!isAdreno(context)) {
+                container.setGraphicsDriver(GraphicsDrivers.VORTEK + "," + GraphicsDrivers.VIRGL);
+                container.setDXWrapper(DXWrappers.WINED3D);
+            }
+            container.putExtra("l2ConfigVersion", String.valueOf(CONFIG_VERSION));
+            container.saveData();
+        }
+        catch (Exception e) {
+            // si falla, se queda con la config que tenia
         }
     }
 
